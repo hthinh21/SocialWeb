@@ -1,37 +1,25 @@
 import jwt from "jsonwebtoken";
+import { User } from "../models/userModel.js";
 
-const checkToken = (req, res, next) => {
-    try {
-        let { token } = req.headers;
-        if (!token) {
-            return res.status(403).send(`Không có quyền truy cập`);
-        }
-        if (verifyToken(token)) {
-            next();
-        } else {
-            throw new Error('Token không hợp lệ');
-        }
-    } catch (error) {
-        res.status(403).send(`Không có quyền truy cập: ${error.message}`);
-    }
+export const authMiddleware = async (req, res, next) => {
+  try {
+    const token = req.cookies.token;
+
+    if (!token) return res.status(403).json({ message: "Không xác thực" });
+
+    const decodedData = jwt.verify(token, process.env.JWT_SEC);
+
+    if (!decodedData)
+      return res.status(400).json({
+        message: "Token hết hạn",
+      });
+
+    req.user = await User.findById(decodedData.id);
+
+    next();
+  } catch (error) {
+    res.status(500).json({
+      message: "Vui lòng đăng nhập lại",
+    });
+  }
 };
-
-
-const taoToken = (user) => {
-  const { _id, username, email, name, dob, description, avatar } = user;
-  const data = { _id, username, email, name, dob, description, avatar }; 
-  return jwt.sign({ data }, "HOANGTHINH", { expiresIn: "7d" }); 
-};
-
-const verifyToken = (token) => {
-    try {
-        const decoded = jwt.verify(token, "HOANGTHINH");
-        const { data } = decoded;
-        return data;
-    } catch (error) {
-        console.error("Error decoding token:", error);
-        return null;
-    }
-};
-
-export { checkToken, taoToken, verifyToken };

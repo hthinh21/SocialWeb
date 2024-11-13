@@ -1,21 +1,25 @@
   import express from 'express';
   import { User } from '../models/userModel.js';
-  import { loginUser } from '../controllers/userControllers.js';
+  import { searchUsers, 
+          userProfile,
+          userFollowerandFollowingData,
+          followandUnfollowUser,
+          getNotifications,
+          loginUser}
+          from '../controllers/userControllers.js';
   import { updateUserProfile } from "../controllers/userControllers.js";
-  import { upload } from "../middlewares/upload.js"; // Middleware Multer
-  import { checkToken } from '../middlewares/authMiddleware.js';
-
+  import { upload } from "../middlewares/upload.js"; 
+  import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { get } from 'mongoose';
   const router = express.Router();
-  // const multer = require('multer');
-  // const upload = multer({ dest: 'uploads/' });
-  // router.route("/profile").post(updateUserProfile)
 
-  // Route để cập nhật thông tin người dùng, bao gồm upload avatar
-  // router.put('/editprofile', checkToken, upload.single('avatar'), updateUserProfile);
+  router.get('/notification/:id', authMiddleware,getNotifications); 
+  router.post('/follow/:id', authMiddleware, followandUnfollowUser);
+  router.get("/followdata/:id", authMiddleware, userFollowerandFollowingData);
+  router.get('/profile/:id', authMiddleware, userProfile);
   router.put('/:id', upload.single('avatar'), updateUserProfile);
-
-  
-// Route đăng nhập
+  router.get("/all", authMiddleware, searchUsers);
+  // Route đăng nhập
   router.post('/login', loginUser);
 
   // Route for Register

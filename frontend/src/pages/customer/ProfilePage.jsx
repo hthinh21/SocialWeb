@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import img1 from '../../assets/img_1.jpg';
 import img2 from '../../assets/img_2.jpg';
 import img3 from '../../assets/img_3.jpg';
@@ -7,7 +7,7 @@ import img5 from '../../assets/img_5.jpg';
 import img6 from '../../assets/img_6.jpg';
 import img7 from '../../assets/img_7.jpg';
 import img8 from '../../assets/img_8.jpg';
-import avatar from '../../assets/avt.jpg';
+// import avatar from '../../assets/avt.jpg';
 import activity_1 from '../../assets/activity_1.png';
 import activity_2 from '../../assets/activity_2.png';
 import bookmark_1 from '../../assets/bookmark_1.png';
@@ -18,6 +18,11 @@ import setting from '../../assets/setting.png';
 import { Link } from 'react-router-dom';
 import Cookies from "js-cookie";
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+import ChangeAvatarModal from '../../components/ChangeAvatarModal';
+import FollowersModal from '../../components/FollowersModal';
+import FollowingsModal from '../../components/FollowingsModal';
 
 const posts = [
   { image: img1, likes: 474000, comments: 24000 },
@@ -55,22 +60,22 @@ const bookmarks = [
   { image: img8, likes: 568328, comments: 3550 },
 ];
 
-const user = [
-  {
-    avatar:'../../assets/avt.jpg' ,
-    name: 'fourth.ig',
-    fullname: 'Nattawat Jirochtikul',
-    bio: [
-      '@numone_official',
-      '🐾 @munmuang.ig',
-      '0639796424, 026699079',
-      'GMMTVARTISTS@GMAIL.COM',
-    ],
-    posts: 497,
-    followers: 3500000,
-    following: 1006
-  },
-];
+// const user = [
+//   {
+//     avatar:'../../assets/avt.jpg' ,
+//     name: 'fourth.ig',
+//     fullname: 'Nattawat Jirochtikul',
+//     bio: [
+//       '@numone_official',
+//       '🐾 @munmuang.ig',
+//       '0639796424, 026699079',
+//       'GMMTVARTISTS@GMAIL.COM',
+//     ],
+//     posts: 497,
+//     followers: 3500000,
+//     following: 1006
+//   },
+// ];
 
 // Hàm định dạng số lượng theo dõi
 const formatNumber = (num) => {
@@ -92,6 +97,13 @@ const ProfilePage = () => {
   const [visiblePosts, setVisiblePosts] = useState(12); // Khởi tạo với 12 bài viết
   const [loading, setLoading] = useState(false);
   const [loadedAll, setLoadedAll] = useState(false); // Trạng thái kiểm tra đã tải hết hay chưa
+  const [followersData, setFollowersData] = useState([]);
+  const [followingsData, setFollowingsData] = useState([]);
+  const [isChangeAvatarModalOpen, setIsChangeAvatarModalOpen] = useState(false);
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false); // Thay đổi tên cho rõ ràng
+  const [isFollowingsModalOpen, setIsFollowingsModalOpen] = useState(false); // Modal cho Đang theo dõi
+  // const [previewAvatar, setPreviewAvatar] = useState(null);
+  const enqueueSnackbar = useSnackbar();
   const userId = Cookies.get("userId");
 
   const handleLoadMorePosts = () => {
@@ -107,9 +119,23 @@ const ProfilePage = () => {
       }, 1000); // Thời gian giả lập tải
     }
   };
+  async function followData() {
+    try {
+      const { data } = await axios.get(`http://localhost:1324/users/followdata/${userId}`, {
+        withCredentials: true, // hoặc dùng headers nếu cần thêm token
+      });     
+      setFollowersData(data.followers.length);
+      setFollowingsData(data.followings.length);
+    } catch (error) {
+      console.log(error);
+      console.log("Error fetching user data", error);
+    }
+  }
 
+  const { id } = useParams();
   useEffect(() => {
-   
+    console.log(id);
+    
       const fetchUserData = async () => {
         if (!userId) return;
   
@@ -129,6 +155,7 @@ const ProfilePage = () => {
       };
   
       fetchUserData();
+      followData();
   
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
@@ -140,8 +167,32 @@ const ProfilePage = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [loading, visiblePosts, loadedAll, userId]); // Theo dõi trạng thái cần thiết
-
+  }, [loading, visiblePosts, loadedAll, userId]); 
+  
+  const handleAvatarChange = (newAvatar) => {
+    setAvatar(newAvatar);
+    updateAvatar(newAvatar)
+  };
+  const updateAvatar = async (newAvatar) => {
+    try {
+      const userId = Cookies.get('userId'); 
+      const formData = new FormData();
+      formData.append("avatar", newAvatar); 
+  
+      const response = await axios.put(
+        `http://localhost:1324/users/${userId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      enqueueSnackbar('Thêm ảnh thành công', {variant : 'success'})
+    } catch (error) {
+      console.error("Error updating avatar", error);
+    }
+  };
   return (
     <div className="container mx-auto p-5 bg-black" >
       {/* Header Section */}
@@ -149,7 +200,7 @@ const ProfilePage = () => {
         {/* Profile Information */}
         <div className="w-full lg:w-[500px] h-[300px] relative flex justify-center items-center">
           <div className="w-[200px] h-[200px]">
-            <img className="w-full h-full rounded-full object-cover" src={`data:image/jpeg;base64,${avatar}`} alt="profile" />
+            <img className="w-full h-full rounded-full object-cover" src={`data:image/jpeg;base64,${avatar}`}  alt="profile" onClick={() => setIsChangeAvatarModalOpen(true)} />
           </div>
         </div>
 
@@ -169,15 +220,34 @@ const ProfilePage = () => {
           {/* Stats */}
           <div className="flex gap-5 text-center lg:text-left">
             <div className="flex flex-row items-center cursor-pointer">
-              <span className="text-white text-2xl">{formatNumber(user[0].posts)} bài viết</span>
+              <span className="text-white text-2xl">0 bài viết</span>
             </div>
             <div className="flex flex-row items-center cursor-pointer">
-              <span className="text-white text-2xl">{formatNumber(user[0].followers)} người theo dõi</span>
+              <span className="text-white text-2xl">{formatNumber(followersData)} người theo dõi</span>
             </div>
             <div className="flex flex-row items-center cursor-pointer">
-              <span className="text-white text-2xl">Đang theo dõi {formatNumber(user[0].following)} người dùng</span>
+              <span className="text-white text-2xl" >Đang theo dõi {formatNumber(followingsData)} người dùng</span>
             </div>
           </div>
+
+          {/* Modals */}
+          {/* <FollowersModal
+            isOpen={isFollowersModalOpen}
+            onClose={() => setIsFollowersModalOpen(false)}
+            followers={followersData.followersList}
+          />
+
+          <FollowingsModal
+            isOpen={isFollowingsModalOpen}
+            onClose={() => setIsFollowingsModalOpen(false)}
+            followings={followingsData.followingsList}
+          /> */}
+          <ChangeAvatarModal
+            isOpen={isChangeAvatarModalOpen}
+            onClose={() => setIsChangeAvatarModalOpen(false)}
+            currentAvatar={`data:image/jpeg;base64,${avatar}`} // Pass the current avatar to the modal
+            onAvatarChange={handleAvatarChange} // Hàm xử lý thay đổi avatar
+          />
 
           {/* User Bio */}
           <div className="text-center lg:text-left" style={{ fontSize: '20px' }}>

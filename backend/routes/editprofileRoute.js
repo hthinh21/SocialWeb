@@ -1,8 +1,7 @@
 import express from 'express';
 import { User } from '../models/userModel.js';
-import { loginUser, updateUserProfile } from '../controllers/userControllers.js';
-import { upload } from "../middlewares/upload.js"; // Middleware Multer cho upload avatar
-import { checkToken } from '../middlewares/authMiddleware.js';
+import { updateUserProfile } from '../controllers/userControllers.js';
+import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 

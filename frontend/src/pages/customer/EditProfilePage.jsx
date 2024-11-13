@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Cookies from "js-cookie";
@@ -52,7 +52,7 @@ const EditProfilePage = () => {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Đặt header cho multipart
+            "Content-Type": "multipart/form-data", 
           },
         }
       );

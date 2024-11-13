@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import{ useState } from 'react';
 import Spinner from '../components/Spiner';
 import axios from 'axios';
 import { useSnackbar } from 'notistack';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie'; 
+
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -16,13 +17,15 @@ const Login = () => {
     const handleLogin = () => {
         setLoading(true);
         axios
-          .post('http://localhost:1324/login', { username, password }) 
+          .post('http://localhost:1324/login', { username, password }, { withCredentials: true }) 
           .then((response) => {
-            const { userId } = response.data;
-
-            // Cookies.set('token', token, { expires: 1 / 24, secure: true, sameSite: 'Strict' });
-            Cookies.set('userId', userId, { expires: 1 / 24, secure: true, sameSite: 'Strict' });
-            Cookies.get("userId");
+            const { userId, token } = response.data; 
+            console.log("User ID:", userId);
+            console.log("Token:", token);
+    
+            // Ghi cookie
+            Cookies.set('token', token, { expires: 1 / 24, secure: true, sameSite: 'Strict' });
+            Cookies.set('userId', userId, { expires: 1 / 24, secure: true, sameSite: 'Strict' });      
 
             enqueueSnackbar('Đăng nhập thành công', { variant: 'success' });
             navigate('/home');

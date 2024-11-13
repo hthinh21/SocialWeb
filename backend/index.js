@@ -5,18 +5,20 @@ import userRoute from './routes/userRoute.js'
 import editprofileRoute from './routes/editprofileRoute.js'
 import cors from 'cors'
 import { loginUser, updateUserProfile } from './controllers/userControllers.js';
-import { checkToken } from './middlewares/authMiddleware.js';
-const app = express();
-// import cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// app.use(cookieParser());
+const app = express();
+
+
+app.use(cookieParser());
 
 app.use(express.json());
 
-
 app.use(cors({
-    origin: 'http://localhost:5173', // Thay đổi nếu frontend không phải ở port này
-   // Cho phép gửi cookie
+    origin: 'http://localhost:5173',
+    credentials: true,// Cho phép gửi cookie
 }));
 
 app.get('/', (request, response) => {
@@ -24,17 +26,8 @@ app.get('/', (request, response) => {
     return response.status(234).send("Welcome myPage")
 })
 app.use('/users',userRoute);
-app.use('/login',loginUser);
-// app.use('/edit', editprofileRoute);
-//
-// Option 2: Allow Custom Origins
-// app.use(
-//   cors({
-//     origin: 'http://localhost:1324',
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type'],
-//   })
-// );
+app.post('/login',loginUser);
+
 mongoose.connect(mongoDBURL)
 .then(() => {
     console.log(`Connect to database!`);
